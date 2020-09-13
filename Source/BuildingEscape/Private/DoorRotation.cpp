@@ -3,6 +3,8 @@
 
 #include "DoorRotation.h"
 #include "GameFramework/Actor.h"
+#include "Engine/World.h"
+#include "GameFramework/PlayerController.h"
 
 // Sets default values for this component's properties
 UDoorRotation::UDoorRotation()
@@ -15,17 +17,19 @@ UDoorRotation::UDoorRotation()
 }
 
 
-// Called when the game starts
-void UDoorRotation::BeginPlay()
+void UDoorRotation::OpenDoor()
 {
-	Super::BeginPlay();
-
 	AActor* owner = GetOwner();
 
 	FRotator const Rotator = FRotator(0, 90, 0);
 
 	owner->SetActorRotation(Rotator);
-	
+}
+
+// Called when the game starts
+void UDoorRotation::BeginPlay()
+{
+	ActorThatOpens = GetWorld()->GetFirstPlayerController()->GetPawn();
 }
 
 
@@ -34,10 +38,9 @@ void UDoorRotation::TickComponent(float DeltaTime, ELevelTick TickType, FActorCo
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	/*AActor* owner2 = GetOwner();
-
-	FRotator rotator = FRotator(0, 90, 90);
-
-	owner2->SetActorRotation(rotator);*/
+	if(pressurePlate->IsOverlappingActor(ActorThatOpens))
+	{
+		OpenDoor();
+	}
 }
 
