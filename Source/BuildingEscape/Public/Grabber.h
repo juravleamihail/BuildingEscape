@@ -6,6 +6,7 @@
 #include "PhysicsEngine/PhysicsHandleComponent.h"
 #include "Components/ActorComponent.h"
 #include "Components/InputComponent.h"
+#include "Components/PrimitiveComponent.h"
 #include "DrawDebugHelpers.h"
 #include "Grabber.generated.h"
 
@@ -23,7 +24,7 @@ public:
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
-	void GetFirstPhysicsBodyInReach();
+	FHitResult GetFirstPhysicsBodyInReach();
 
 public:	
 	// Called every frame
@@ -36,4 +37,6 @@ private:
 	UInputComponent* inputComponent = nullptr;
 	void Grab();
 	void Release();
+	FVector GetReachLineEnd();
+	FVector GetReachLineStart();
 };
