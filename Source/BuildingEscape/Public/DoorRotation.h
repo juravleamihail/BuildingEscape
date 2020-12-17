@@ -3,10 +3,15 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "UObject/NoExportTypes.h"
 #include "Components/ActorComponent.h"
 #include "Engine/TriggerVolume.h"
+#include "Delegates/Delegate.h"
+#include "Components/PrimitiveComponent.h"
+#include <Runtime\Engine\Classes\Sound\SoundCue.h>
 #include "DoorRotation.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FDoorEvent);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class BUILDINGESCAPE_API UDoorRotation : public UActorComponent
@@ -16,7 +21,6 @@ class BUILDINGESCAPE_API UDoorRotation : public UActorComponent
 public:	
 	// Sets default values for this component's properties
 	UDoorRotation();
-	void OpenDoor();
 	void CloseDoor();
 
 protected:
@@ -27,18 +31,24 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
+	UPROPERTY(BlueprintAssignable)
+	FDoorEvent onOpen;
+
+	UPROPERTY(BlueprintAssignable)
+	FDoorEvent onClose;
+
 private:
 	UPROPERTY(EditAnywhere)
-	float openAngle = 90.0f;
+	ATriggerVolume* pressurePlate = nullptr;
 
 	UPROPERTY(EditAnywhere)
-	ATriggerVolume* pressurePlate;
+	float triggerMass = 30.0f;
 
 	UPROPERTY(EditAnywhere)
-	float doorCloseDelay = 1;
+	USoundCue* SoundCue = nullptr;
 
-	float lastDoorOpenTime;
+	AActor* owner = nullptr;
+	bool canPlay = true;
 
-	AActor* actorThatOpens;
-	AActor* owner;
+	float GetTotalMassOfActorsOnPlate();
 };

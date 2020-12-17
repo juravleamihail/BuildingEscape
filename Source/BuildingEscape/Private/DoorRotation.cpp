@@ -4,7 +4,9 @@
 #include "DoorRotation.h"
 #include "GameFramework/Actor.h"
 #include "Engine/World.h"
+#include "Components/AudioComponent.h"
 #include "GameFramework/PlayerController.h"
+#include <Runtime\Engine\Classes\Kismet\GameplayStatics.h>
 
 // Sets default values for this component's properties
 UDoorRotation::UDoorRotation()
@@ -16,21 +18,19 @@ UDoorRotation::UDoorRotation()
 	// ...
 }
 
-
-void UDoorRotation::OpenDoor()
-{
-	owner->SetActorRotation(FRotator(0, openAngle, 0));
-}
-
 void UDoorRotation::CloseDoor()
 {
+	if (owner == nullptr)
+	{
+		return;
+	}
+	
 	owner->SetActorRotation(FRotator(0, 0, 0));
 }
 
 // Called when the game starts
 void UDoorRotation::BeginPlay()
 {
-	actorThatOpens = GetWorld()->GetFirstPlayerController()->GetPawn();
 	owner = GetOwner();
 }
 
@@ -40,15 +40,41 @@ void UDoorRotation::TickComponent(float DeltaTime, ELevelTick TickType, FActorCo
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	if(pressurePlate->IsOverlappingActor(actorThatOpens))
+	UAudioComponent* audioComponent = nullptr;
+	if((GetTotalMassOfActorsOnPlate() > triggerMass))
 	{
-		OpenDoor();
-		lastDoorOpenTime = GetWorld()->GetTimeSeconds();
+		canPlay = false;
+		onOpen.Broadcast();
+
+		//TODO: add sounds when you open the door and stop it after through code
+		//audioComponent = UGameplayStatics::SpawnSoundAtLocation(this, SoundCue, GetOwner()->GetTargetLocation(), FRotator::ZeroRotator);
+	}
+	else
+	{
+		canPlay = true;
+		onClose.Broadcast();
+	}
+}
+
+float UDoorRotation::GetTotalMassOfActorsOnPlate()
+{
+	float totalMass = 0;
+
+	TArray<AActor*> overlappingActors;
+
+	if(pressurePlate == nullptr)
+	{
+		return 0;
+	}
+	
+	pressurePlate->GetOverlappingActors(OUT overlappingActors);
+
+	for (const auto& actor : overlappingActors)
+	{
+		totalMass += actor->FindComponentByClass<UPrimitiveComponent>()->GetMass();
+		UE_LOG(LogTemp, Warning, TEXT("%s on pressure plate"), *actor->GetName())
 	}
 
-	if(GetWorld()->GetTimeSeconds() - lastDoorOpenTime > doorCloseDelay)
-	{
-		CloseDoor();
-	}
+	return totalMass;
 }
 
